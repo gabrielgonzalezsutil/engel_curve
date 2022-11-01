@@ -5,7 +5,7 @@
 rstudioapi::writeRStudioPreference("data_viewer_max_columns", 1000L)
 rm(list = ls())
 pacman::p_load('data.table','dplyr','plyr','haven')
-setwd('G:/My Drive/research/rwanda_drive/engel_curves/data/nisr_eicv/data/')
+setwd('G:/My Drive/research/rwanda_drive/engel_curve/data/nisr_eicv/data/')
 
 # Function ---------------------------------------------------------------
 

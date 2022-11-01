@@ -5,7 +5,7 @@
 rstudioapi::writeRStudioPreference("data_viewer_max_columns", 1000L)
 rm(list = ls())
 pacman::p_load('data.table','dplyr','plyr','haven')
-setwd('G:/My Drive/research/rwanda_drive/engel_curves/data/nisr_eicv/data/')
+setwd('G:/My Drive/research/rwanda_drive/engel_curve/data/nisr_eicv/data/')
 
 # Functions --------------------------------------------------------------------
 
@@ -93,6 +93,5 @@ section1$absent <- NULL
 section1 <- section1 %>% select('hhid', 'month', 'year', 'cluster','province',
                                 'district', everything())
 demographics <- section1
-rm(section1)
-save(demographics, file = "G:/My Drive/research/rwanda_drive/engel_curves/data/processed/demographics.Rdata")
-
+rm(section1, aux)
+save(demographics, file = "G:/My Drive/research/rwanda_drive/engel_curve/data/processed/demographics.Rdata")

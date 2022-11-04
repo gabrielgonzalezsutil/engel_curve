@@ -48,4 +48,4 @@ section0 <- section0 %>% select('hhid', 'month', 'year', 'hh_wt', 'pop_wt',
                                  'cluster','province','district', 'region', 
                                  'rural', 'poor', 'poverty', 'quintile','UBUDEHE')
 households <- section0; rm(section0)
-save(households, file = "G:/My Drive/research/rwanda_drive/engel_curves/data/processed/households.Rdata")
+save(households, file = "G:/My Drive/research/rwanda_drive/engel_curve/data/processed/households.Rdata")

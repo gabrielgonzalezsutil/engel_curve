@@ -1,4 +1,4 @@
-# Housing Expenditure EICV
+# Expenditure EICV
 # Author: Gabriel Gonzalez Sutil
 
 # Preliminaries ----------------------------------------------------------------
@@ -100,7 +100,7 @@ water$wasac[!is.na(water$water_unit) & water$water_unit > 0] <- 12 * (water$wate
   
 # Private
 water$water_other <- 0
-water$water_other[water$private == 1] <- water$water_priv_amount[water$private == 1] * 52.14286
+water$water_other[water$private == 1] <- water$water_priv_amount[water$private == 1] * 365
 
 # Private
 water$water_source <- 0
@@ -112,101 +112,139 @@ water$water_income <- 0
 water$water_income[water$water_sold == 1] <- water$sold_amount[water$water_sold == 1] * 365
 
 # Order variables
-water <- water %>% select(hhid, cluster, district, province, piped, wasac, private, 
-                        water_other, water_source, distance, water_income)
+water <- water %>% select(hhid, cluster, district, province, piped, wasac, 
+                        private, other, water_source, water_income)
 
 
 # Electricity -------------------------------------------------------------
 electricity <- as.data.frame(section5[,c('hhid','clust','province','district',
                                          's5cq16','s5cq16a1','s5cq16a4','s5cq16a5',
-                                         's5cq16a6','s5cq16a8','s5cq16a9','s5cq17')]) 
-setnames(electricity, c('clust','s5cq16','s5cq16a1','s5cq16a4','s5cq16a5',
-                        's5cq16a6','s5cq16a8','s5cq16a9','s5cq17'),
-         c('cluster','source','main_source','pay','availability',
-           'availability_evening','blackouts','duration_blackouts','electricity'))
+                                         's5cq16a6','s5cq16a7','s5cq16a8',
+                                         '')]) 
+setnames(electricity, c('clust','s5aq11','s5bq7','s5bq4a','s5bq4b', 's5bq5','s5bq6a','s5bq6b'),
+         c('cluster','occupancy','outside','rent_amount','rent_unit',
+           'rent_inkind','rent_kind_amount','rent_kind_unit'))
 variables <- c('hhid','cluster','province','district')
-electricity <- erase_label(electricity, variables) 
+rent <- erase_label(rent, variables) 
 
-# Source electricity
-electricity$pay[electricity$main_source == 7] <- 3
-electricity$pay_elec <- 0
-electricity$pay_elec[electricity$pay != 3] <- 1
-
-electricity$grid <- 0 
-electricity$grid[electricity$main_source == 1 | electricity$main_source == 2] <- 1
-electricity$generator <- 0 
-electricity$generator[electricity$main_source == 3] <- 1
-electricity$solar <- 0 
-electricity$solar[electricity$main_source == 4] <- 1
-electricity$lantern <- 0 
-electricity$lantern[electricity$main_source == 5] <- 1
-electricity$battery <- 0 
-electricity$battery[electricity$main_source == 6] <- 1
-electricity$other <- 0 
-electricity$other[electricity$main_source == 8] <- 1
-electricity$no_electricity <- 0 
-electricity$no_electricity[electricity$main_source == 7] <- 1
-
-electricity$light_grid <- 0 
-electricity$light_grid[electricity$source == 1 | electricity$source == 2] <- 1
-electricity$light_generator <- 0 
-electricity$light_generator[electricity$source == 4] <- 1
-electricity$light_solar <- 0 
-electricity$light_solar[electricity$source == 9] <- 1
-electricity$light_battery <- 0 
-electricity$light_battery[electricity$source == 10 | electricity$source == 12] <- 1
-electricity$light_latern <- 0 
-electricity$light_latern[electricity$source == 8] <- 1
-electricity$light_other <- 0 
-electricity$light_other[electricity$source == 3 | electricity$source == 5 |
-                          electricity$source == 6 | electricity$source == 7 |
-                          electricity$source == 11 | electricity$source == 13] <- 1
+unique(section5$s5cq16a7)
 
 
-# Payment
-electricity$electricity[is.na(electricity$electricity)] <- 0 
-electricity$electricity <- electricity$electricity * 12 
-electricity <- erase_label(electricity, 'electricity')
 
-# Not good quality 
-electricity$duration_blackouts[is.na(electricity$duration_blackouts)] <- 0
-electricity$duration_blackouts[electricity$duration_blackouts == 888] <- NA
-electricity$availability[is.na(electricity$availability)] <- 0
-electricity$availability[electricity$availability == 888] <- NA
-electricity$availability_evening[is.na(electricity$availability_evening)] <- 0
-electricity$availability_evening[electricity$availability_evening == 888] <- NA
 
-# Order variables
-electricity <- electricity %>% select(hhid, cluster, district, province, 
-                                      electricity, no_electricity, pay_elec, 
-                                      grid, generator, solar, lantern, battery, 
-                                      other, light_grid, light_generator, 
-                                      light_solar, light_battery, light_latern,
-                                      light_other)
 
-# Fuels -------------------------------------------------------------
-cooking <- as.data.frame(section5[,c('hhid','clust','province','district',
-                                     's5cq18','s5cq18b71','s5cq18b72',
-                                     's5cq18b8a','s5cq18b8b')]) 
-setnames(cooking, c('clust','s5cq18','s5cq18b71','s5cq18b72','s5cq18b8a',
-                        's5cq18b8b'), c('cluster','source','fuel1','fuel2',
-                                        'fuel1_cost','fuel2_cost'))
-variables <- c('hhid','cluster','province','district')
-electricity <- erase_label(cooking, variables) 
+# Import Section ---------------------------------------------------------------
+section4 <- read_sav('eicv5/cs_S1_S2_S3_S4_S6A_S6E_Person.sav')
 
-# Fuels
+section1 <- read_sav('eicv5/cs_S1_S2_S3_S4_S6A_S6E_Person.sav')
+services <- read_sav('eicv5/cs_S5F_Access_to_services.sav')
+employment <- read_sav('eicv5/cs_S6B_Employement_6C_Salaried_S6D_Business.sav')
+livestock1 <- read_sav('eicv5/cs_S7A1_livestock.sav')
+livestock2 <- read_sav('eicv5/cs_S7A2_livestock.sav')
+livestock3 <- read_sav('eicv5/cs_S7A3_livestock.sav')
+agr1 <- read_sav('eicv5/cs_S7B1_land_Agriculture.sav')
+agr2 <- read_sav('eicv5/cs_S7B2_land_Agriculture.sav')
+parcel <- read_sav('eicv5/cs_S7C_parcels.sav')
+large_crop <- read_sav('eicv5/cs_S7D_large_crop.sav')
+small_crop <- read_sav('eicv5/cs_S7E_small_crop.sav')
+inc_agr <- read_sav('eicv5/cs_S7F_income_agriculture.sav')
+exp_agr <- read_sav('eicv5/cs_S7G_expenditure_agriculture.sav')
+trans_agr <- read_sav('eicv5/cs_S7H_transformation_agriculture.sav')
+exp1 <- read_sav('eicv5/cs_S8A1_expenditure.sav')
+exp2 <- read_sav('eicv5/cs_S8A2_expenditure.sav')
+exp3 <- read_sav('eicv5/cs_S8A3_expenditure.sav')
+exp4 <- read_sav('eicv5/cs_S8B_expenditure.sav')
+farming <- read_sav('eicv5/cs_S8C_farming.sav')
+transfer_in <- read_sav('eicv5/cs_S9B_transfers_in.sav')
+vup_rssp_1 <- read_sav('eicv5/cs_S9C_Vup_ubudehe_and_Rssp_schemes.sav')
+vup_rssp_2 <- read_sav('eicv5/cs_S9C3_Vup_ubudehe_and_Rssp_schemes.sav')
+vup_rssp_3 <- read_sav('eicv5/cs_S9C4_Vup_ubudehe_and_Rssp_schemes.sav')
+other_inc <- read_sav('eicv5/cs_S9D_other_income.sav')
+other_exp <- read_sav('eicv5/cs_S9E_Other_expenditure.sav')
+credits1 <- read_sav('eicv5/cs_S10A1_Credits.sav')
+credits2 <- read_sav('eicv5/cs_S10A2_Listing_of_credits.sav')
+durable1 <- read_sav('eicv5/cs_S10B1_Durable_household_goods.sav')
+durable2 <- read_sav('eicv5/cs_S10B2_Durable_household_goods.sav')
+savings <- read_sav('eicv5/cs_S10C1_Savings.sav')
+tontine <- read_sav('eicv5/cs_S10C2_Tontine.sav')
+income <- read_sav('eicv5/EICV5_Poverty_file.sav')
 
-# Order variables
-electricity <- electricity %>% select(hhid, cluster, district, province, 
-                                      electricity, no_electricity, on_grid, 
-                                      grid, generator, solar, lantern, battery, 
-                                      other, light_grid, light_generator, 
-                                      light_solar, light_battery, light_latern,
-                                      light_other)
+max(income$cons1)
 
-# Save data --------------------------------------------------------------------
-save(rent, file = "G:/My Drive/research/rwanda_drive/engel_curve/data/processed/rent.Rdata")
-save(water, file = "G:/My Drive/research/rwanda_drive/engel_curve/data/processed/water.Rdata")
-save(electricity, file = "G:/My Drive/research/rwanda_drive/engel_curve/data/processed/electricity.Rdata")
-save(cooking, file = "G:/My Drive/research/rwanda_drive/engel_curve/data/processed/cooking.Rdata")
+# Expenditure ------------------------------------------------------------------
+aux <- income[,c('hhid','clust','province','district','exp1','exp4',
+                 'exp5','exp6','exp7','exp8','exp9','exp10','exp11',
+                 'exp12','exp13','exp14_2','exp15_2','exp16_2','exp16a_2',
+                 'exp17','exp18','cons1','food','quintile','decile')]
+setnames(aux, c('exp1','exp4', 'exp5','exp6','exp7','exp8','exp9','exp10',
+                'exp11','exp12','exp13','exp14_2','exp15_2','exp16_2',
+                'exp16a_2','exp17','exp18','cons1','food'),
+         c('exp_edu','exp_rent_imp','exp_rent_act','exp_maint','exp_water',
+           'exp_elec','exp_inkind','exp_employer_subsidy','exp_other_inkind',
+           'exp_annual','exp_month','exp_freq','exp_food','own_food','own_nonfood',
+           'exp_durable','inkind_value','exp_total','exp_food'))
+
+# To check total consumption look file saved below. 
+# setwd('G:/My Drive/rwanda_drive/engel_curves/outputs')
+# write.csv(aux,'expenditure.csv')
+
+# Adjust some missing values - I checked and they are zeros!
+aux$exp_durable[is.na(aux$exp_durable)] <- 0
+aux$inkind_value[is.na(aux$inkind_value)] <- 0
+
+# There is a mistake in EICV5 for electricity consumption (monthly is multiplied
+# by 13 and not 12)
+aux$exp_total <- aux$exp_total - aux$exp_elec 
+aux$exp_elec <- (aux$exp_elec/13) * 12 
+aux$exp_total <- aux$exp_total + aux$exp_elec 
+
+aux$exp_rent <- aux$exp_rent_imp + aux$exp_rent_act + aux$exp_maint
+aux$exp_other <- aux$exp_total - aux$exp_food - aux$exp_edu - aux$exp_rent - 
+  aux$exp_water - aux$exp_elec - aux$exp_durable
+
+##################################### TODO #####################################
+# Check all the expenditure values
+
+# Other energy expenditures
+
+
+
+
+
+
+
+aux <- aux[,c('hhid','clust','province','district','exp_food','exp_edu',
+                 'exp_rent', 'exp_water', 'exp_elec', 'exp_durable', 'exp_other',
+                 'exp_total')]
+
+# Monthly
+aux$exp_food <- aux$exp_food/12
+aux$exp_edu <- aux$exp_edu/12
+aux$exp_water <- aux$exp_water/12
+aux$exp_elec <- aux$exp_elec/12
+aux$exp_durable <- aux$exp_durable/12
+aux$exp_other <- aux$exp_other/12
+aux$exp_total <- aux$exp_total/12
+  
+# Share
+aux$food_share <- aux$exp_food/aux$exp_total * 100
+aux$edu_share <- aux$exp_edu/aux$exp_total * 100
+aux$water_share <- aux$exp_water/aux$exp_total * 100
+aux$elec_share <- aux$exp_elec/aux$exp_total * 100
+aux$durable_share <- aux$exp_durable/aux$exp_total * 100
+aux$other_share <- aux$exp_other/aux$exp_total * 100
+
+eicv <- merge(eicv, aux, by = c('hhid','clust','province','district'), all.x = T)
+rm(aux)
+
+
+setwd('G:/My Drive/research/rwanda_drive/engel_curve/data/processed')
+load('households.Rdata')
+expenditure <- households[,c('hhid','cluster','province','district')]
+rm(households)
+
+
+
+
+
 
